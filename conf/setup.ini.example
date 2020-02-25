@@ -1,0 +1,11 @@
+[cluster-user]
+user = user_name
+password = user_password
+
+[s2-ssmigration]
+user = ssmigration
+password = the_baddest_password
+
+[swiftbuckets-ssmigration]
+user = ssmigration:ssmigration
+password = another_bad_password
