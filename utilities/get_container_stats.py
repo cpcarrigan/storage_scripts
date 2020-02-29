@@ -37,15 +37,15 @@ container_list = open(f,"r")
 csv = open(csv_f,"a")
 csv.write("url,tenant,container,objects,bytes,X-storage-policy\n")
 for container_line in container_list:
-    container = container_line.strip()
-    url = server + '/v1/' + tenant + '/' + container
-    http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
-    #    print(http_resp.headers)
-    #    print(url + " - " + str(http_resp.status_code))
-    if http_resp.status_code == 204:
-        csv.write(url + "," + tenant + "," + container + "," + http_resp.headers['X-Container-Object-Count'] + "," + http_resp.headers['X-Container-Bytes-Used'] + "," + http_resp.headers['X-Storage-Policy'] + "\n")
+  container = container_line.strip()
+  url = server + '/v1/' + tenant + '/' + container
+  http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
+  # print(http_resp.headers)
+  # print(url + " - " + str(http_resp.status_code))
+  if http_resp.status_code == 204:
+    csv.write(url + "," + tenant + "," + container + "," + http_resp.headers['X-Container-Object-Count'] + "," + http_resp.headers['X-Container-Bytes-Used'] + "," + http_resp.headers['X-Storage-Policy'] + "\n")
      
-    else:
-        print("bad response " + url)
+  else:
+    print("bad response " + url)
 container_list.close()
 csv.close()
