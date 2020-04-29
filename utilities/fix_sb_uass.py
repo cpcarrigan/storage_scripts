@@ -5,14 +5,13 @@ import re
 import requests
 import sys
 
-# Purpose: get stats from a list of containers inside the same tenant and
-# cluster
-# How to invoke: ./get_container_stats.py cluster_short_name tenant file_list_of_containers
-# Example: ./get_container_stats.py s1 snapfish s1-snapfish_uploads-container-list
-# Output: cluster-tenant-container-stats.csv aka s1-snapfish-container-stats.csv
+# Purpose: delete specific range of containers in a cluster that are empty
 
 cluster = 'swiftbuckets'
 tenant = 'uass'
+container_prefix = 'hires_'
+start = 10001
+end = 100001
 
 config = configparser.ConfigParser()
 config.read("../conf/setup.ini")
@@ -40,8 +39,8 @@ http_auth = http_resp.headers["X-Auth-Token"]
 
 # {'Content-Length': '0', 'X-Container-Object-Count': '1', 'Date': 'Thu, 13 Feb 2020 01:56:47 GMT', 'Accept-Ranges': 'bytes', 'X-Trans-Id': 'tx82d93fc08580442c8eae4-005e44acdf', 'X-Storage-Policy': '3copy', 'Last-Modified': 'Wed, 15 Jan 2020 00:39:49 GMT', 'Connection': 'keep-alive', 'X-Timestamp': '1579048788.66572', 'X-Container-Read': '.r:*', 'X-Container-Bytes-Used': '5162463', 'X-Container-Sharding': 'False', 'Content-Type': 'application/json; charset=utf-8', 'X-Openstack-Request-Id': 'tx82d93fc08580442c8eae4-005e44acdf' }
 
-for i in range(10001, 100001):
-  container = 'hires_' + str(i)
+for i in range(start, end):
+  container = container_prefix + str(i)
   url = server + '/v1/' + tenant + '/' + container
   http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
   # print(http_resp.headers)
