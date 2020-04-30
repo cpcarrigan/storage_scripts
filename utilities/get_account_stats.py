@@ -33,7 +33,7 @@ http_auth = http_resp.headers["X-Auth-Token"]
 # {'X-Account-Storage-Policy-Three-Copy-Object-Count': '1124964', 'X-Account-Object-Count': '1124964', 'Connection': 'keep-alive', 'Content-Length': '0', 'X-Account-Storage-Policy-Three-Copy-Bytes-Used': '36202309965826', 'X-Account-Storage-Policy-Three-Copy-Container-Count': '1', 'X-Timestamp': '1366635649.47829', 'X-Trans-Id': 'txbc6b5a50e9ab4c1c88ffe-005e59a294', 'Date': 'Fri, 28 Feb 2020 23:30:28 GMT', 'X-Account-Bytes-Used': '36202309965826', 'X-Account-Container-Count': '1', 'Content-Type': 'text/plain; charset=utf-8', 'Accept-Ranges': 'bytes'}
 
 account_list = open(f,"r")
-csv = open(csv_f,"a")
+csv = open(csv_f,"w")
 csv.write("url,account,object-count,bytes,container-count\n")
 for account_line in account_list:
   account = account_line.strip()
