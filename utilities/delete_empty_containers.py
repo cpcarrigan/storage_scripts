@@ -7,11 +7,18 @@ import sys
 
 # Purpose: delete specific range of containers in a cluster that are empty
 
-cluster = 'swiftbuckets'
-tenant = 'uass'
-container_prefix = 'hires_'
-start = 10001
-end = 100001
+# cluster = 'swiftbuckets'
+# tenant = 'cvs-ua-qa'
+# container_prefix = 'hires_'
+# # start = 9999
+# end   = 100001
+
+cluster = sys.argv[1]
+tenant = sys.argv[2]
+container_prefix = sys.argv[3]
+start = sys.argv[4]
+end = sys.argv[5]
+
 
 config = configparser.ConfigParser()
 config.read("../conf/setup.ini")
