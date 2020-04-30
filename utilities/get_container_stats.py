@@ -44,7 +44,7 @@ print(server + "/v1/" + tenant + " auth token: " + http_auth)
 # {'Content-Length': '0', 'X-Container-Object-Count': '1', 'Date': 'Thu, 13 Feb 2020 01:56:47 GMT', 'Accept-Ranges': 'bytes', 'X-Trans-Id': 'tx82d93fc08580442c8eae4-005e44acdf', 'X-Storage-Policy': '3copy', 'Last-Modified': 'Wed, 15 Jan 2020 00:39:49 GMT', 'Connection': 'keep-alive', 'X-Timestamp': '1579048788.66572', 'X-Container-Read': '.r:*', 'X-Container-Bytes-Used': '5162463', 'X-Container-Sharding': 'False', 'Content-Type': 'application/json; charset=utf-8', 'X-Openstack-Request-Id': 'tx82d93fc08580442c8eae4-005e44acdf' }
 
 container_list = open(f,"r")
-csv = open(csv_f,"a")
+csv = open(csv_f,"w")
 csv.write("url,tenant,container,objects,bytes,X-storage-policy,compression_status\n")
 for container_line in container_list:
   container = container_line.strip()
