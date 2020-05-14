@@ -16,7 +16,7 @@ push_gw = 'prom01.tnt6-zone1.aus2:9091'
 # echo "some_metric 3.14" | curl --data-binary @- http://localhost:9091/metrics/job/some_job
 
 # grab the list of accounts to pull for each cluster from the data dir
-files = glob.glob("../data/*-account-list.txt")
+files = glob.glob("/home/ccarrigan/git/misc/storage_scripts/data/*-account-list.txt")
 
 http_sess = requests.session()
 
@@ -30,7 +30,7 @@ for k in files:
 
   # get user & password for cluster
   config = configparser.ConfigParser()
-  config.read("../conf/setup.ini")
+  config.read("/home/ccarrigan/git/misc/storage_scripts/conf/setup.ini")
   tenant_user = config[cluster + '-' + tenant]['user']
   tenant_pass = config[cluster + '-' + tenant]['password']
 
@@ -48,9 +48,11 @@ for k in files:
   for account_line in account_list:
     account = account_line.strip()
     url = server + '/v1/' + account
+    print('look at: ' + url)
 
     # get account stats:
     http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
+    # print(http_resp)
     # sample response:
     # {'X-Account-Storage-Policy-Three-Copy-Object-Count': '1124964', 'X-Account-Object-Count': '1124964', 'Connection': 'keep-alive', 'Content-Length': '0', 'X-Account-Storage-Policy-Three-Copy-Bytes-Used': '36202309965826', 'X-Account-Storage-Policy-Three-Copy-Container-Count': '1', 'X-Timestamp': '1366635649.47829', 'X-Trans-Id': 'txbc6b5a50e9ab4c1c88ffe-005e59a294', 'Date': 'Fri, 28 Feb 2020 23:30:28 GMT', 'X-Account-Bytes-Used': '36202309965826', 'X-Account-Container-Count': '1', 'Content-Type': 'text/plain; charset=utf-8', 'Accept-Ranges': 'bytes'}
 
