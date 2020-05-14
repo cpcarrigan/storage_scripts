@@ -47,18 +47,31 @@ container_list = open(f,"r")
 csv = open(csv_f,"w")
 csv.write("url,tenant,container,objects,bytes,X-storage-policy,compression_status\n")
 for container_line in container_list:
-  container = container_line.strip()
-  url = server + '/v1/' + tenant + '/' + container
-  http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
-  # print(http_resp.headers)
-  # print(url + " - " + str(http_resp.status_code))
-  if http_resp.status_code == 204:
-    if 'X-Container-Meta-File-Compressed' in http_resp.headers:
-      compression = 'yes'
+  try:
+    container = container_line.strip()
+    url = server + '/v1/' + tenant + '/' + container
+    http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
+    # print(http_resp.headers)
+    # print(url + " - " + str(http_resp.status_code))
+
+    # refresh the token and try again:
+    if http_resp.status_code == 401:
+      http_resp = http_sess.get(server + "/auth/v1.0", headers={"X-Auth-User":tenant_user, "X-Auth-Key":tenant_pass })
+      http_auth = http_resp.headers["X-Auth-Token"]
+      url = server + '/v1/' + tenant + '/' + container
+      http_resp = http_sess.head(url, headers={"X-Auth-Token":http_auth})
+
+    if http_resp.status_code == 204:
+      if 'X-Container-Meta-File-Compressed' in http_resp.headers:
+        compression = 'yes'
+      else:
+        compression = 'no'
+      csv.write(url + "," + tenant + "," + container + "," + http_resp.headers['X-Container-Object-Count'] + "," + http_resp.headers['X-Container-Bytes-Used'] + "," + http_resp.headers['X-Storage-Policy'] + "," + compression + "\n")
     else:
-      compression = 'no'
-    csv.write(url + "," + tenant + "," + container + "," + http_resp.headers['X-Container-Object-Count'] + "," + http_resp.headers['X-Container-Bytes-Used'] + "," + http_resp.headers['X-Storage-Policy'] + "," + compression + "\n")
-  else:
-    print("bad response " + url)
+      print("bad response " + url)
+  except requests.exceptions.ConnectionError:
+    http_resp = http_sess.get(server + "/auth/v1.0", headers={"X-Auth-User":tenant_user, "X-Auth-Key":tenant_pass })
+    http_auth = http_resp.headers["X-Auth-Token"]
+
 container_list.close()
 csv.close()
