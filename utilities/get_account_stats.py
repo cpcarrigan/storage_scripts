@@ -10,6 +10,11 @@ import sys
 # Example: ./get_account_stats.py s1 snapfish s1-snapfish_uploads-container-list
 # Output: cluster-tenant-stats.csv aka s1-snapfish-stats.csv
 
+if (len(sys.argv) < 2):
+  print("instructions on use:")
+  print("./get_account_stats.py s1")
+  print("./get_account_stats.py cluster_name # eg. s1 or s2 or swiftbuckets")
+  exit()
 cluster = sys.argv[1]
 tenant = 'ssmigration'
 
