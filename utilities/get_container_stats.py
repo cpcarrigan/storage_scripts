@@ -11,6 +11,12 @@ import sys
 # Example: ./get_container_stats.py s1 snapfish s1-snapfish_uploads-container-list
 # Output: cluster-tenant-container-stats.csv aka s1-snapfish-container-stats.csv
 
+if (len(sys.argv) < 2):
+  print("instructions on use:")
+  print("./get_container_stats.py s1 snapfish ../data/s1-snapfish_uploads-container-list")
+  print("./get_container_stats.py cluster_name account_name file_list_of_containers")
+  exit()
+
 cluster = sys.argv[1]
 tenant = sys.argv[2]
 f = sys.argv[3]
