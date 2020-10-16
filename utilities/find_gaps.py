@@ -18,9 +18,9 @@ if (len(sys.argv) < 3):
 container = sys.argv[1]
 data_file = sys.argv[2]
 
-if container == 'olowres' or container == 'lowres':
+if container == 'snapfish_mvmtn' or container == 'olowres' or container == 'lowres' or container == 'thumbnail':
   containerType = 'lowres'
-  limit = '256'
+  limit = '128'
   batchSize = '4096'
 else:
   containerType = 'hires'
@@ -46,6 +46,10 @@ for line in df:
     # print(line_arr[2])
     blank, nu = line_arr[2].split('_')
     bisect.insort(sc, int(nu))
+  elif line_arr[6] == 'no' and line_arr[2].startswith(container):
+    # print(line_arr[2])
+    nu = line_arr[2].replace(container,'')
+    bisect.insort(sc, int(nu))
 print(sc)
 
 def print_sc(first, last):
@@ -61,6 +65,7 @@ def print_sc(first, last):
 
 first = None
 last = None
+print('################')
 for i in range(len(sc)):
   # print("look at: " + str(sc[i]))
   if first is None:
@@ -87,5 +92,5 @@ for i in range(len(sc)):
 #    print('first: ' + str(first) + ' last: ' + str(last))
     print_sc(first, last)
 
-print('################')
-print('curl -v "http://localhost:8080/migration/command?command=lowresCompress&openstackUser=uass&dataCenter=s2&container=olowres&batchSize=4096&startRange=1&endRange=35001&threads=2&limit=256"')
+# print('################')
+# print('curl -v "http://localhost:8080/migration/command?command=lowresCompress&openstackUser=uass&dataCenter=s2&container=olowres&batchSize=4096&startRange=1&endRange=35001&threads=2&limit=256"')
