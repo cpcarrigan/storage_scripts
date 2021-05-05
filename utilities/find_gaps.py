@@ -24,7 +24,7 @@ if container == 'snapfish_mvmtn' or container == 'olowres' or container == 'lowr
   batchSize = '4096'
 else:
   containerType = 'hires'
-  limit = '20'
+  limit = '128'
   batchSize = '1024'
 
 df = open(data_file,"r")
@@ -42,17 +42,21 @@ for line in df:
   host = list1[2].split('.')
 #  print(host)
   cluster = host[0]
+#  print(line_arr)
   if line_arr[6] == 'no' and line_arr[2].startswith(container + '_'):
-    # print(line_arr[2])
+    # print(line_arr)
     blank, nu = line_arr[2].split('_')
     bisect.insort(sc, int(nu))
-  elif line_arr[6] == 'no' and line_arr[2].startswith(container):
-    # print(line_arr[2])
+  elif line_arr[6] == 'no' and line_arr[2].startswith(container) and not line_arr[2].endswith(container):
+    # print(line_arr)
     nu = line_arr[2].replace(container,'')
     bisect.insort(sc, int(nu))
 print(sc)
 
 def print_sc(first, last):
+  # range of 1 means last is null, work around it:
+  if last == None:
+    last = str(int(first) + 1)
   print('curl -v "http://localhost:8080/migration/command?command=' + containerType \
    + 'Compress&openstackUser=' + tenant \
    + '&dataCenter=' + cluster  \
