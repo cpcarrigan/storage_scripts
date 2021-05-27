@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
-import logging
-import re
-from datetime import datetime, timedelta
 import configparser
+from datetime import datetime, timedelta
+import logging
 import os
-
+import re
+import time
+from swiftclient.service import SwiftService, SwiftError
 from sys import argv
+
 
 # Purpose: get stats from a list of objects inside the same cluster, tenant,
 # and containers
@@ -25,14 +27,12 @@ os.environ['ST_AUTH'] = 'https://swiftbuckets.sf-cdn.com/auth/v1.0'
 os.environ['ST_AUTH_VERSION'] = '1.0'
 
 env_var = os.environ
-print(env_var)
+# print(env_var)
 
 logging.basicConfig(level=logging.ERROR)
 logging.getLogger("requests").setLevel(logging.CRITICAL)
 
 logger = logging.getLogger(__name__)
-
-from swiftclient.service import SwiftService, SwiftError
 
 container = 'production'
 minimum_size = 1024
@@ -42,9 +42,10 @@ print("done with date")
 
 pattern = '^\d+.xml$'
 
-batch_size = 1000
+batch_size = 9999
 to_delete = []
 
+_opts = {'object_dd_threads': 20, 'container_threads': 20}
 with SwiftService() as swift:
   try:
     list_parts_gen = swift.list(container=container)
@@ -61,10 +62,10 @@ with SwiftService() as swift:
           result = re.match(pattern, i_name)
           #if result:
           if (last_modified < cutoff_date) and result:
-            print(
-              "Will delete: %s [size: %s] [etag: %s] - [last_modified: %s]" %
-              (i_name, i_size, i_etag, last_modified)
-            )
+            # print(
+            #   "Will delete: %s [size: %s] [etag: %s] - [last_modified: %s]" %
+            #   (i_name, i_size, i_etag, last_modified)
+            # )
             to_delete.append(i_name)
           # else:
           #   print(
@@ -77,12 +78,15 @@ with SwiftService() as swift:
             try:
               delete_gen = swift.delete(container=container, objects=to_delete)
               for element in delete_gen:
+                tic = time.perf_counter()
                 if element["success"]:
                   logger.error("Successful deletion of :", element)
                   print(element)
                 else:
                   logger.error("Failure deletion of :", element)
                   print(element)
+                toc = time.perf_counter()
+                print(f"Deleted in {toc - tic:0.4f} seconds")
             except SwiftError as d:
               logger.error(d.value)
             to_delete.clear()
