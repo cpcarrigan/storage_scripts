@@ -2,6 +2,7 @@
 
 import sys
 import bisect
+import numbers
 
 containerType = ''
 tenant = ''
@@ -49,8 +50,12 @@ for line in df:
     bisect.insort(sc, int(nu))
   elif line_arr[6] == 'no' and line_arr[2].startswith(container) and not line_arr[2].endswith(container):
     # print(line_arr)
-    nu = line_arr[2].replace(container,'')
-    bisect.insort(sc, int(nu))
+    try:
+      nu = int(line_arr[2].replace(container,''))
+      bisect.insort(sc, int(nu))
+    except ValueError:
+      print('got ValueError for: ' + line_arr[2].replace(container,''))
+      
 print(sc)
 
 def print_sc(first, last):
