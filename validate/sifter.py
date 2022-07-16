@@ -4,7 +4,7 @@ import os
 import pandas as pd 
 import sys
 
-# get file name from arg $1, decompress a file, parse it, validate the entries
+# get file name from 1st argument, decompress a file, parse it, validate the entries
 # split it into workable chunks based on cluster
 max_lines = 5000
 
@@ -18,9 +18,9 @@ bucket = { 'esthreecos-ak.sf-cdn.com': 'other',
                 'swiftbuckets.sf-cdn.com': 'sb'}
 
 
-if (len(sys.argv) < 2):
+if (len(sys.argv) < 2 or len(sys.argv) > 2):
   print("instructions on use:")
-  print("./sifter.py parquet-ready/parquet-file")
+  print("./sifter.py csv-ready/data-file.csv.gz")
   exit()
 
 df = pd.read_parquet(sys.argv[1])
@@ -43,7 +43,19 @@ track = { 'other': [0, 0, gzip.open('work/other/ready/' + pq_file + '-0.gz','wt'
 for line in csv_obj:
   ele = line.strip().split(',')
 
+  # header (8 elements):
   # row,assetid,accountid,datacenter,storagecluster,migrationstatus,imagesource,imagesourceurl
+
+  # there is a mixture of records that have 7 elements and some that have 8
+  # elements. If there are only 7 elements, insert a record at the beginning
+  # of value '0'
+  # 
+  # 7 elements (native csv):
+  # 114948587022,658258022,AUS,S1,MIGRATED,TnlRefOLRValid,http://s2.sf-cdn.com/v1/uass/olowres_9964/44F8iFLFL-N44q0e8gz-ENlvAF71gZmshc0MpJJFgwo.jpg
+  if len(ele) == 7:
+    ele.insert(0,0)
+
+  # 8 elements (native parquet):
   # 0,751447346011,5221243011,SFO,SB,MIGRATED,StorageAPIOLRValid,http://swiftbuckets.sf-cdn.com/v1/uass/olowres_635/uLPYvi0HzQtsEjYBVBjAQtlvAF71gZmshc0MpJJFgwo.jpg
 
   # valid if has a number for assetid, accountid, begins w/ 'http://', ends with 'jpg'

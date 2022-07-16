@@ -79,6 +79,7 @@ for line in data_handle:
     get_bytes = int(r_get.headers['Content-Length'])
 
     img_t1 = time.perf_counter()
+    # do a try / catch on "OSError: Truncated File Read"
     img = Image.open(BytesIO(r_get.content))
     w, h = img.size
     img_t2 = time.perf_counter()
@@ -99,7 +100,7 @@ for line in data_handle:
     # print('output line: ')
     # print(f'{line.strip()},{w},{h},{f_bytes}')
 
-    logging.warning(f'URL={ele[7]}, get_time={get_time:.3f}, perf_get={get_time2:.3f}, head_time={head_time:.3f}, perf_head={head_time2:.3f}, perf_total={perf_total:.3f}, total_time={(head_time+get_time):.3f}, width={w}, height={h}, bytes={f_bytes}')
+    # logging.warning(f'URL={ele[7]}, get_time={get_time:.3f}, perf_get={get_time2:.3f}, head_time={head_time:.3f}, perf_head={head_time2:.3f}, perf_total={perf_total:.3f}, total_time={(head_time+get_time):.3f}, width={w}, height={h}, bytes={f_bytes}')
 
     output_handle.write(f'{line.strip()},{w},{h},{f_bytes}\n')
 
