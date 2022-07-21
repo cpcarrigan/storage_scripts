@@ -6,3 +6,5 @@ __pycache__
 *.pyc
 *.ini
 *.swp
+.vs/*
+conf/setup.ini
