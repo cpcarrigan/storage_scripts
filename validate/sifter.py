@@ -9,87 +9,81 @@ import sys
 max_lines = 5000
 
 bucket = { 'esthreecos-ak.sf-cdn.com': 'other',
+                'images1.snapfish.com': 'other',
                 'images2.snapfish.com': 'other',
                 's1.sf-cdn.com': 's1',
                 's2.sf-cdn.com': 's2',
                 'swiftbuckets1.sf-cdn.com': 's1',
                 'swiftbuckets3.sf-cdn.com': 's1',
+                'swiftbuckets4.sf-cdn.com': 's2',
                 'swiftbuckets7.sf-cdn.com': 's2',
                 'swiftbuckets.sf-cdn.com': 'sb'}
 
 
 if (len(sys.argv) < 2 or len(sys.argv) > 2):
   print("instructions on use:")
-  print("./sifter.py csv-ready/data-file.csv.gz")
+  print("./sifter.py data-file.csv.gz")
   exit()
 
-df = pd.read_parquet(sys.argv[1])
-df.to_csv(sys.argv[1] + '.csv')
+# df = pd.read_parquet(sys.argv[1])
+# df.to_csv(sys.argv[1] + '.csv')
 
-csv_file = sys.argv[1] + '.csv'
-pq_file = sys.argv[1].strip('parquet-ready/')
-bad_file = 'parquet-bad/' + pq_file
+csv_file = sys.argv[1]
+# pq_file = sys.argv[1].strip('parquet-ready/')
+bad_file = csv_file
 
-csv_obj = open(csv_file, 'r')
-bad_obj = open(bad_file, 'w')
+csv_obj = gzip.open('csv-ready/' + csv_file, 'rt')
+bad_obj = open('csv-bad/' + bad_file, 'w')
 
-# dict of line counter, file counter, file_object
-track = { 'other': [0, 0, gzip.open('work/other/ready/' + pq_file + '-0.gz','wt')], 
-          's1': [0, 0, gzip.open('work/s1/ready/' + pq_file + '-0.gz','wt')], 
-          's2': [0, 0, gzip.open('work/s2/ready/' + pq_file + '-0.gz','wt')], 
-          'sb': [0, 0, gzip.open('work/sb/ready/' + pq_file + '-0.gz','wt')], 
+# dict of array of line counter, file counter, gzip file_object
+track = { 'other': [0, 0, gzip.open('work/other/ready/' + csv_file, 'wt')], 
+          's1':    [0, 0, gzip.open('work/s1/ready/' + csv_file, 'wt')], 
+          's2':    [0, 0, gzip.open('work/s2/ready/' + csv_file, 'wt')], 
+          'sb':    [0, 0, gzip.open('work/sb/ready/' + csv_file, 'wt')], 
           }
 
 for line in csv_obj:
   ele = line.strip().split(',')
 
-  # header (8 elements):
-  # row,assetid,accountid,datacenter,storagecluster,migrationstatus,imagesource,imagesourceurl
-
-  # there is a mixture of records that have 7 elements and some that have 8
-  # elements. If there are only 7 elements, insert a record at the beginning
-  # of value '0'
-  # 
   # 7 elements (native csv):
+  # assetid,accountid,datacenter,storagecluster,migrationstatus,imagesource,imagesourceurl
   # 114948587022,658258022,AUS,S1,MIGRATED,TnlRefOLRValid,http://s2.sf-cdn.com/v1/uass/olowres_9964/44F8iFLFL-N44q0e8gz-ENlvAF71gZmshc0MpJJFgwo.jpg
-  if len(ele) == 7:
-    ele.insert(0,0)
-
-  # 8 elements (native parquet):
-  # 0,751447346011,5221243011,SFO,SB,MIGRATED,StorageAPIOLRValid,http://swiftbuckets.sf-cdn.com/v1/uass/olowres_635/uLPYvi0HzQtsEjYBVBjAQtlvAF71gZmshc0MpJJFgwo.jpg
 
   # valid if has a number for assetid, accountid, begins w/ 'http://', ends with 'jpg'
   
-  if ele[1].isdigit() == True and \
-     ele[2].isdigit() == True and \
-     ele[7].startswith('http://') and \
-     ele[7].endswith('jpg'):
+  if ele[0].isdigit() == True and \
+     ele[1].isdigit() == True and \
+     ele[6].startswith('http://') and \
+     ele[6].endswith('jpg'):
 
-    # ele[7] looks like 'http://swiftbuckets.sf-cdn.com/v1/uass/olowres_635/uLPYvi0HzQtsEjYBVBjAQtlvAF71gZmshc0MpJJFgwo.jpg'
+    # ele[6] (the URL field) looks like 'http://swiftbuckets.sf-cdn.com/v1/uass/olowres_635/uLPYvi0HzQtsEjYBVBjAQtlvAF71gZmshc0MpJJFgwo.jpg'
     # split out all elements of the URL field by '/':
-    url = ele[7].split('/')
+    url = ele[6].split('/')
     # print(url)
-    # get just hostname from url array
+    # get just hostname (eg, 'swiftbuckets.sf-cdn.com') from url array
     host = url[2]
 
-    # write line to 'work/bucket/ready/pq_file-file_counter.gz'
+    # write line to 'work/bucket/ready/csv_file.csv.gz'
     # eg: work/s1/ready/ASDFL123HJ234KH-42.gz
-    track[bucket[host]][2].write(line)
+    try:
+      track[bucket[host]][2].write(line)
 
-    # incr line count by 1
-    track[bucket[host]][0] += 1
+      # incr line count by 1
+      track[bucket[host]][0] += 1
 
-    # if max_lines exceeded, roll over to a new file
-    if track[bucket[host]][0] > max_lines:
+      # if max_lines exceeded, roll over to a new file
+      if track[bucket[host]][0] > max_lines:
 
-      # reset line counter
-      track[bucket[host]][0] = 0
-      # add one to file counter
-      track[bucket[host]][1] += 1
-      # close current file
-      track[bucket[host]][2].close()
-      # open new file
-      track[bucket[host]][2] = gzip.open('work/' + bucket[host] + '/ready/' + pq_file + '-' + str(track[bucket[host]][1]) + '.gz', 'wt')
+        # reset line counter
+        track[bucket[host]][0] = 0
+        # add one to file counter
+        track[bucket[host]][1] += 1
+        # close current file
+        track[bucket[host]][2].close()
+        # open new file
+        track[bucket[host]][2] = gzip.open('work/' + bucket[host] + '/ready/' + csv_file.strip('.csv.gz') + '-' + str(track[bucket[host]][1]) + '.csv.gz', 'wt')
+    except KeyError:
+      bad_obj.write(line)
 
   else:
     bad_obj.write(line)
@@ -101,7 +95,5 @@ for k in track:
 bad_obj.close()
 csv_obj.close()
 
-# delete old csv file
-os.remove(csv_file)
-# move parquet file from ready to done
-os.rename(sys.argv[1], sys.argv[1].replace('parquet-ready','parquet-done'))
+# move csv file from ready to done
+os.rename('csv-ready/' + sys.argv[1], 'csv-done/' +  sys.argv[1])
