@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
-import boto3
+""" Fetch files from S3 per Brent Williams """
+
 import gzip
 import os
 import shutil
+import boto3
 
 
 #session = boto3.Session(
@@ -13,8 +15,7 @@ import shutil
 #)
 
 
-# aws s3 ls
-# s3://snapfish-prod-media-image-migration/assets_db_repairs/AUS/S1/1d7b4e/
+# aws s3 ls s3://snapfish-prod-media-image-migration/assets_db_repairs/AUS/S1/1d7b4e/
 
 
 #Initiate S3 Resource
@@ -26,7 +27,8 @@ s3c = boto3.client('s3')
 my_bucket = s3r.Bucket('snapfish-prod-media-image-migration')
 
 for obj in my_bucket.objects.all():
-  if obj.key.startswith('assets_db_repairs/AUS/S1') and obj.key.endswith('.csv'):
+  # if obj.key.startswith('assets_db_repairs/AUS/S2') and obj.key.endswith('.csv'):
+  if obj.key.startswith('assets_db_repairs/SFO') and obj.key.endswith('.csv'):
     print(f"Downloading: {obj.bucket_name}/{obj.key}")
     obj_path = obj.key.split('/')
     csv = obj_path[-1]
@@ -37,7 +39,7 @@ for obj in my_bucket.objects.all():
 
     # compress csv file
     with open(csv, 'rb') as f_in:
-      with gzip.open(f"{csv}.gz", 'wb') as f_out:
+      with gzip.open(f"csv-ready/{csv}.gz", 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
 
     # mv the csv file in s3 to new name so we don't download it twice
