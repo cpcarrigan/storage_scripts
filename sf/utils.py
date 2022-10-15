@@ -36,13 +36,52 @@ class ObjectStorage:
     self.tnl = 'http://tnl.snapfish.com/assetrenderer/v2/thumbnail/'
     self.tnl_sess = requests.session()
 
+
+#        sfCellNameMap.put("dm60000", new DFSMapBean("swiftbuckets.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("dm60002", new DFSMapBean("swiftbuckets.sf-cdn.com", "encoding"));
+#        sfCellNameMap.put("dm80001", new DFSMapBean("swiftbuckets.sf-cdn.com", "uass"));
+#        sfCellNameMap.put("ldm60000", new DFSMapBean("swiftbuckets.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("ldm60002", new DFSMapBean("swiftbuckets.sf-cdn.com", "encoding"));
+#        sfCellNameMap.put("ldm80001", new DFSMapBean("swiftbuckets.sf-cdn.com", "uass"));
+
+#        sfCellNameMap.put("dm70000", new DFSMapBean("s1.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("dm80002", new DFSMapBean("s1.sf-cdn.com", "uass"));
+#        sfCellNameMap.put("ldm70000", new DFSMapBean("s1.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("ldm80002", new DFSMapBean("s1.sf-cdn.com", "uass"));
+
   def clean_up_url(self, url):
+    url = url.replace('"','"')
     url = url.replace('https://','http://')
     url = url.replace('swiftbuckets1.sf-cdn.com','s1.sf-cdn.com')
     url = url.replace('swiftbuckets3.sf-cdn.com','s1.sf-cdn.com')
     url = url.replace('swiftbuckets4.sf-cdn.com','s2.sf-cdn.com')
-    url = url.replace('swiftbuckets7.sf-cdn.com','s1.sf-cdn.com')
+    url = url.replace('swiftbuckets7.sf-cdn.com','s2.sf-cdn.com')
     url = url.replace('esthreecos-ak.sf-cdn.com','esthreecos1.sf-cdn.com')
+
+    url = url.replace('images1.snapfish.com/dm60000','swiftbuckets.sf-cdn.com/v1/snapfish')
+    url = url.replace('images1.snapfish.com/dm60002','swiftbuckets.sf-cdn.com/v1/encoding')
+    url = url.replace('images1.snapfish.com/dm80001','swiftbuckets.sf-cdn.com/v1/uass')
+    url = url.replace('images1.snapfish.com/ldm60000','swiftbuckets.sf-cdn.com/v1/snapfish')
+    url = url.replace('images1.snapfish.com/ldm60002','swiftbuckets.sf-cdn.com/v1/encoding')
+    url = url.replace('images1.snapfish.com/ldm80001','swiftbuckets.sf-cdn.com/v1/uass')
+
+    url = url.replace('images2.snapfish.com/dm60000','swiftbuckets.sf-cdn.com/v1/snapfish')
+    url = url.replace('images2.snapfish.com/dm60002','swiftbuckets.sf-cdn.com/v1/encoding')
+    url = url.replace('images2.snapfish.com/dm80001','swiftbuckets.sf-cdn.com/v1/uass')
+    url = url.replace('images2.snapfish.com/ldm60000','swiftbuckets.sf-cdn.com/v1/snapfish')
+    url = url.replace('images2.snapfish.com/ldm60002','swiftbuckets.sf-cdn.com/v1/encoding')
+    url = url.replace('images2.snapfish.com/ldm80001','swiftbuckets.sf-cdn.com/v1/uass')
+
+    url = url.replace('images1.snapfish.com/dm70000','s1.sf-cdn.com/v1/snapfish')
+    url = url.replace('images1.snapfish.com/dm80002','s1.sf-cdn.com/v1/uass')
+    url = url.replace('images1.snapfish.com/ldm70000','s1.sf-cdn.com/v1/snapfish')
+    url = url.replace('images1.snapfish.com/ldm80002','s1.sf-cdn.com/v1/uass')
+
+    url = url.replace('images2.snapfish.com/dm70000','s1.sf-cdn.com/v1/snapfish')
+    url = url.replace('images2.snapfish.com/dm80002','s1.sf-cdn.com/v1/uass')
+    url = url.replace('images2.snapfish.com/ldm70000','s1.sf-cdn.com/v1/snapfish')
+    url = url.replace('images2.snapfish.com/ldm80002','s1.sf-cdn.com/v1/uass')
+
     url = url.replace('irmw2.sf-cdn.com','swiftbuckets.sf-cdn.com')
     url = url.replace('irmw-cf.sf-cdn.com','esthreecos1.sf-cdn.com')
     url = url.replace('irmw-s1.sf-cdn.com','s1.sf-cdn.com')
