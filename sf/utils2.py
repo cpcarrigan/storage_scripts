@@ -49,6 +49,18 @@ class ObjectStorage:
     self.tnl = 'http://tnl.snapfish.com/assetrenderer/v2/thumbnail/'
     self.tnl_sess = requests.session()
 
+#        sfCellNameMap.put("dm60000", new DFSMapBean("swiftbuckets.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("dm60002", new DFSMapBean("swiftbuckets.sf-cdn.com", "encoding"));
+#        sfCellNameMap.put("dm80001", new DFSMapBean("swiftbuckets.sf-cdn.com", "uass"));
+#        sfCellNameMap.put("ldm60000", new DFSMapBean("swiftbuckets.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("ldm60002", new DFSMapBean("swiftbuckets.sf-cdn.com", "encoding"));
+#        sfCellNameMap.put("ldm80001", new DFSMapBean("swiftbuckets.sf-cdn.com", "uass"));
+
+#        sfCellNameMap.put("dm70000", new DFSMapBean("s1.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("dm80002", new DFSMapBean("s1.sf-cdn.com", "uass"));
+#        sfCellNameMap.put("ldm70000", new DFSMapBean("s1.sf-cdn.com", "snapfish"));
+#        sfCellNameMap.put("ldm80002", new DFSMapBean("s1.sf-cdn.com", "uass"));
+
   def clean_up_url(self, url):
     url = url.replace('"','"')
     url = url.replace('https://','http://')
@@ -190,7 +202,7 @@ class ObjectStorage:
         r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except KeyError:
-        logging.critical("Exiting. No key for: " + cluster_tenant)
+        logging.critical(f"Exiting. No key for: {cluster_tenant}")
         sys.exit()
     else:
       logging.info('URL does not match expected pattern: ' + url)
@@ -231,13 +243,13 @@ class ObjectStorage:
         r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except KeyError:
-        logging.critical("Exiting. No key for: " + cluster_tenant)
+        logging.critical(f"Exiting. No key for: {cluster_tenant}")
         sys.exit()
     else:
-      logging.info('URL does not match expected pattern: ' + url)
+      logging.info(f"URL does not match expected pattern: {url}")
       return False
-    #
     # need to return boolean
+
   def get_referer(self, url):
     url = self.tnl + url.strip()
     tnl_resp = self.tnl_sess.head(url)
