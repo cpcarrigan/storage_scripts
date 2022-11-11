@@ -4,6 +4,7 @@ import configparser
 import datetime
 import hashlib
 import hmac
+import json
 import logging
 import pytz
 import re
@@ -21,7 +22,7 @@ class ObjectStorage:
     # {'cluster_tenant': ['cluster', 'tenant', 'user-str', 'password', 'session-obj','auth-token']
     
     config = configparser.ConfigParser()
-    config.read("../conf/setup.ini")
+    config.read("/home/ccarrigan/git/storage_scripts/conf/setup.ini")
 
     # s1.sf-cdn.com snapfish
     # s1.sf-cdn.com uass
@@ -143,7 +144,7 @@ class ObjectStorage:
       tenant = m.group(2)
       container = m.group(3)
       obj = m.group(4)
-      logging.info(f"cluster: {cluster}, tenant: {tenant}, 1st container: {container}, 1st object: {object}")
+      logging.warning(f"cluster: {cluster}, tenant: {tenant}, 1st container: {container}, 1st object: {obj}")
       cluster_tenant = cluster + '-' + tenant
 
       delete_url = f"http://{cluster}.sf-cdn.com/v1/{tenant}?bulk-delete=true"
@@ -165,7 +166,8 @@ class ObjectStorage:
         logging.info(r)
         logging.info(r.json())
         r_json = r.json()
-        logging.warn(f"Attempted to delete: {len(list_urls)}, actually deleted: {r_json['Number Deleted']} in {request_time} total seconds or {request_time/len(list_urls)} seconds per object")
+        logging.info("json response: " + json.dumps(r.json(), indent=1))
+        logging.warning(f"Attempted to delete: {len(list_urls)}, actually deleted: {r_json['Number Deleted']} in {request_time} total seconds or {request_time/len(list_urls)} seconds per object (total_time/total_files)")
         logging.info(f"Status: '{r_json['Response Status']}', Number deleted: {r_json['Number Deleted']}, Number Not Found: {r_json['Number Not Found']}")
         if r_json['Response Status'] == '400 Bad Request' and r_json['Errors'][0][0][1] == '401 Unauthorized':
           raise requests.HTTPError()
@@ -177,18 +179,18 @@ class ObjectStorage:
       except requests.HTTPError:
         logging.info("status code: " + str(r.status_code) + " for URL: " + url)
         if r.status_code == 401 or (r_json['Response Status'] == '400 Bad Request' and r_json['Errors'][0][0][1] == '401 Unauthorized'):
-          logging.warn("Got HTTP 401, reauth and try delete one time more for " + url)
+          logging.warning("Got HTTP 401, reauth and try delete one time more for " + url)
           self.create_openstack_session(cluster_tenant)
           r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except requests.exceptions.ConnectionError:
         # set up the connection again
-        logging.warn("Got ConnectionError, reauth and try delete one time more for " + url)
+        logging.warning("Got ConnectionError, reauth and try delete one time more for " + url)
         self.create_openstack_session(cluster_tenant)
         r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except KeyError:
-        logging.error("No key for: " + cluster_tenant)
+        logging.critical("Exiting. No key for: " + cluster_tenant)
         sys.exit()
     else:
       logging.info('URL does not match expected pattern: ' + url)
@@ -218,18 +220,18 @@ class ObjectStorage:
       except requests.HTTPError:
         logging.info("status code: " + str(r.status_code) + " for URL: " + url)
         if r.status_code == 401:
-          logging.warn("Got HTTP 401, reauth and try delete one time more for " + url)
+          logging.warning("Got HTTP 401, reauth and try delete one time more for " + url)
           self.create_openstack_session(cluster_tenant)
           r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except requests.exceptions.ConnectionError:
         # set up the connection again
-        logging.warn("Got ConnectionError, reauth and try delete one time more for " + url)
+        logging.warning("Got ConnectionError, reauth and try delete one time more for " + url)
         self.create_openstack_session(cluster_tenant)
         r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except KeyError:
-        logging.error("No key for: " + cluster_tenant)
+        logging.critical("Exiting. No key for: " + cluster_tenant)
         sys.exit()
     else:
       logging.info('URL does not match expected pattern: ' + url)
@@ -244,7 +246,7 @@ class ObjectStorage:
     
     if tnl_resp.status_code == 302:
       # grab the 'Location: header, put in log
-      logging.warn(str(tnl_resp.status_code) + ' status Location: ' + tnl_resp.headers['Location'] + " for: " + url)
+      logging.warning(str(tnl_resp.status_code) + ' status Location: ' + tnl_resp.headers['Location'] + " for: " + url)
       # tnl_f.write(tnl_resp.headers['Location'] + '\n')
       return tnl_resp.headers['Location']
 

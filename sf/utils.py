@@ -19,7 +19,7 @@ class ObjectStorage:
     # {'cluster_tenant': ['cluster', 'tenant', 'user-str', 'password', 'session-obj','auth-token']
     
     config = configparser.ConfigParser()
-    config.read("../conf/setup.ini")
+    config.read("/home/ccarrigan/git/storage_scripts/conf/setup.ini")
 
     self.session = {
         'swiftbuckets-uass':     ['swiftbuckets', 'uass', config['swiftbuckets-uass']['user'], config['swiftbuckets-uass']['password'], '', ''],
