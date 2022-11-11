@@ -179,7 +179,7 @@ class ObjectStorage:
         logging.info(r.json())
         r_json = r.json()
         logging.info("json response: " + json.dumps(r.json(), indent=1))
-        logging.warning(f"Attempted to delete: {len(list_urls)}, actually deleted: {r_json['Number Deleted']} in {request_time} total seconds or {request_time/len(list_urls)} seconds per object (total_time/total_files)")
+        logging.warning(f"Attempted to delete {len(list_urls)} objects, actually deleted: {r_json['Number Deleted']} in {request_time} total seconds or {request_time/len(list_urls)} seconds per object (total_time/total_files)")
         logging.info(f"Status: '{r_json['Response Status']}', Number deleted: {r_json['Number Deleted']}, Number Not Found: {r_json['Number Not Found']}")
         if r_json['Response Status'] == '400 Bad Request' and r_json['Errors'][0][0][1] == '401 Unauthorized':
           raise requests.HTTPError()
