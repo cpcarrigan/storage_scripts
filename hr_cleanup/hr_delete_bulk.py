@@ -99,5 +99,5 @@ while not os.path.exists(STOP):
 
 else:
     print(f"Stop file ({STOP}) exists. Exiting")
-    log.critical(f"Stop file ({STOP}) exists. Exiting")
+    logging.critical(f"Stop file ({STOP}) exists. Exiting")
     sys.exit()
