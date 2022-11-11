@@ -147,7 +147,12 @@ class ObjectStorage:
     # use a regex to fix a problem, get two problems
     url_pattern = re.compile(r"http://([^.]+).sf-cdn.com/v1/([^/]+)/([^/]+)/(.*)$")
     # test just the first entry
-    m = url_pattern.match(list_urls[0])
+    try:
+      m = url_pattern.match(list_urls[0])
+    except IndexError:
+      print(f"Exiting. Failed to match pattern on {list_urls[0]}, working on file: {data_file}, list: {list}")
+      logging.critical(f"Exiting. Failed to match pattern on {list_urls[0]}, working on file: {data_file}, list: {list}")
+      sys.exit()
     # extract container and object into an array
     delete_list =''
 
