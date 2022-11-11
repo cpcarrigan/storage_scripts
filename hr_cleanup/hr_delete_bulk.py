@@ -12,7 +12,7 @@ import glob
 import random
 
 sys.path.append("/home/ccarrigan/git/storage_scripts") # Adds higher directory to python modules path.
-from sf import utils2
+from sf import utils
 
 # Overview: Take the generated files, parse, and delete the objects:
 
@@ -53,7 +53,7 @@ while not os.path.exists(STOP):
     logging.basicConfig(filename=f'work/log/{data_file}.log',level=logging.WARNING,format='%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
     logging.info(f"File to import: work/active/{data_file}")
 
-    files_object = utils2.ObjectStorage()
+    files_object = utils.ObjectStorage()
 
     # f_pattern = re.compile(r"http://([^.]+).sf-cdn.com/v1/([^/]+)/pg$")
     f_pattern = re.compile(r"http://([^.]+).sf-cdn.com/v1/([^/]+)/([^/]+)/(.*)$")
