@@ -4,11 +4,14 @@ import configparser
 import datetime
 import hashlib
 import hmac
+import json
 import logging
 import pytz
 import re
 import requests
 import sys
+import time
+import urllib.parse
 
 class ObjectStorage:
   def __init__ (self):
@@ -21,10 +24,20 @@ class ObjectStorage:
     config = configparser.ConfigParser()
     config.read("/home/ccarrigan/git/storage_scripts/conf/setup.ini")
 
+    # s1.sf-cdn.com snapfish
+    # s1.sf-cdn.com uass
+
+    # s2.sf-cdn.com snapfish
+    # s2.sf-cdn.com uass
+
+    # swiftbuckets.sf-cdn.com encoding
+    # swiftbuckets.sf-cdn.com snapfish
+    # swiftbuckets.sf-cdn.com uass
+
     self.session = {
-        'swiftbuckets-uass':     ['swiftbuckets', 'uass', config['swiftbuckets-uass']['user'], config['swiftbuckets-uass']['password'], '', ''],
-        'swiftbuckets-snapfish': ['swiftbuckets', 'snapfish', config['swiftbuckets-snapfish']['user'], config['swiftbuckets-snapfish']['password'], '', ''],
         'swiftbuckets-encoding': ['swiftbuckets', 'encoding', config['swiftbuckets-encoding']['user'], config['swiftbuckets-encoding']['password'], '', ''],
+        'swiftbuckets-snapfish': ['swiftbuckets', 'snapfish', config['swiftbuckets-snapfish']['user'], config['swiftbuckets-snapfish']['password'], '', ''],
+        'swiftbuckets-uass':     ['swiftbuckets', 'uass', config['swiftbuckets-uass']['user'], config['swiftbuckets-uass']['password'], '', ''],
         's1-snapfish':           ['s1', 'snapfish', config['s1-snapfish']['user'], config['s1-snapfish']['password'], '', ''],
         's1-uass':               ['s1', 'uass', config['s1-uass']['user'], config['s1-uass']['password'], '', ''],
         's2-snapfish':           ['s2', 'snapfish', config['s2-snapfish']['user'], config['s2-snapfish']['password'], '', ''],
@@ -35,7 +48,6 @@ class ObjectStorage:
 
     self.tnl = 'http://tnl.snapfish.com/assetrenderer/v2/thumbnail/'
     self.tnl_sess = requests.session()
-
 
 #        sfCellNameMap.put("dm60000", new DFSMapBean("swiftbuckets.sf-cdn.com", "snapfish"));
 #        sfCellNameMap.put("dm60002", new DFSMapBean("swiftbuckets.sf-cdn.com", "encoding"));
@@ -130,6 +142,73 @@ class ObjectStorage:
       logging.info("Server or URL pattern didn't match: " + url)
       return False
 
+  # assume same url, same account for batch delete
+  def delete_openstack_batch(self, list_urls):
+    # use a regex to fix a problem, get two problems
+    url_pattern = re.compile(r"http://([^.]+).sf-cdn.com/v1/([^/]+)/([^/]+)/(.*)$")
+    # test just the first entry
+    m = url_pattern.match(list_urls[0])
+    # extract container and object into an array
+    delete_list =''
+
+    if m:
+      cluster = m.group(1)
+      tenant = m.group(2)
+      container = m.group(3)
+      obj = m.group(4)
+      logging.warning(f"cluster: {cluster}, tenant: {tenant}, 1st container: {container}, 1st object: {obj}")
+      cluster_tenant = cluster + '-' + tenant
+
+      delete_url = f"http://{cluster}.sf-cdn.com/v1/{tenant}?bulk-delete=true"
+
+      for url in list_urls:
+        url_match = url_pattern.match(url)
+        container = url_match.group(3)
+        obj = url_match.group(4)
+        # url_pattern.extract(url)
+        logging.debug(f"URL to delete: {container}/{obj}")
+        delete_list += urllib.parse.quote(f"{container}/{obj}")+'\n'
+      
+      try:
+        logging.debug(self.session[cluster_tenant])
+        logging.debug(f"about to delete: {delete_list}")
+        start = time.perf_counter()
+        r = self.session[cluster_tenant][4].post(delete_url, data=delete_list, headers={'Content-Type':'text/plain', 'X-Auth-Token': self.session[cluster_tenant][5], 'Accept': 'application/json'})
+        request_time = time.perf_counter() - start
+        logging.info(r)
+        logging.info(r.json())
+        r_json = r.json()
+        logging.info("json response: " + json.dumps(r.json(), indent=1))
+        logging.warning(f"Attempted to delete: {len(list_urls)}, actually deleted: {r_json['Number Deleted']} in {request_time} total seconds or {request_time/len(list_urls)} seconds per object (total_time/total_files)")
+        logging.info(f"Status: '{r_json['Response Status']}', Number deleted: {r_json['Number Deleted']}, Number Not Found: {r_json['Number Not Found']}")
+        if r_json['Response Status'] == '400 Bad Request' and r_json['Errors'][0][0][1] == '401 Unauthorized':
+          raise requests.HTTPError()
+        # 19-Oct-22 18:42:15.019 - DEBUG: {'Response Status':
+        # '200 OK', 'Response Body': '', 'Number Deleted': 0, 'Number Not
+        # Found': 1000, 'Errors': []}
+        r.raise_for_status()
+        return True
+      except requests.HTTPError:
+        logging.info("status code: " + str(r.status_code) + " for URL: " + url)
+        if r.status_code == 401 or (r_json['Response Status'] == '400 Bad Request' and r_json['Errors'][0][0][1] == '401 Unauthorized'):
+          logging.warning("Got HTTP 401, reauth and try delete one time more for " + url)
+          self.create_openstack_session(cluster_tenant)
+          r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
+        return False
+      except requests.exceptions.ConnectionError:
+        # set up the connection again
+        logging.warning("Got ConnectionError, reauth and try delete one time more for " + url)
+        self.create_openstack_session(cluster_tenant)
+        r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
+        return False
+      except KeyError:
+        logging.critical(f"Exiting. No key for: {cluster_tenant}")
+        sys.exit()
+    else:
+      logging.info('URL does not match expected pattern: ' + url)
+      return False
+    return True
+
   def delete_openstack_object(self, url):
     # use a regex to fix a problem, get two problems
     url_pattern = re.compile(r"http://([^.]+).sf-cdn.com/v1/([^/]+)/([^/]+)/(.*)$")
@@ -153,24 +232,24 @@ class ObjectStorage:
       except requests.HTTPError:
         logging.info("status code: " + str(r.status_code) + " for URL: " + url)
         if r.status_code == 401:
-          logging.warn("Got HTTP 401, reauth and try delete one time more for " + url)
+          logging.warning("Got HTTP 401, reauth and try delete one time more for " + url)
           self.create_openstack_session(cluster_tenant)
           r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except requests.exceptions.ConnectionError:
         # set up the connection again
-        logging.warn("Got ConnectionError, reauth and try delete one time more for " + url)
+        logging.warning("Got ConnectionError, reauth and try delete one time more for " + url)
         self.create_openstack_session(cluster_tenant)
         r = self.session[cluster_tenant][4].delete(url, headers={'X-Auth-Token': self.session[cluster_tenant][5]})
         return False
       except KeyError:
-        logging.error("No key for: " + cluster_tenant)
+        logging.critical(f"Exiting. No key for: {cluster_tenant}")
         sys.exit()
     else:
-      logging.info('URL does not match expected pattern: ' + url)
+      logging.info(f"URL does not match expected pattern: {url}")
       return False
-    #
     # need to return boolean
+
   def get_referer(self, url):
     url = self.tnl + url.strip()
     tnl_resp = self.tnl_sess.head(url)
@@ -179,7 +258,7 @@ class ObjectStorage:
     
     if tnl_resp.status_code == 302:
       # grab the 'Location: header, put in log
-      logging.warn(str(tnl_resp.status_code) + ' status Location: ' + tnl_resp.headers['Location'] + " for: " + url)
+      logging.warning(str(tnl_resp.status_code) + ' status Location: ' + tnl_resp.headers['Location'] + " for: " + url)
       # tnl_f.write(tnl_resp.headers['Location'] + '\n')
       return tnl_resp.headers['Location']
 
