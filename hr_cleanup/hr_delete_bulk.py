@@ -33,7 +33,6 @@ while not os.path.exists(STOP):
     try:
         #     print(random.choice(os.listdir('work/ready')))
         data_file = random.choice(os.listdir('work/ready'))
-        # sys.exit()
         print(data_file)
     except IndexError:
         print("Exiting because no work files available.")
@@ -90,7 +89,7 @@ while not os.path.exists(STOP):
                     bulk_list.append(url)
                 else:
                     status = files_object.delete_openstack_batch(bulk_list)
-                    logging.warning(f"Deletion status: {status} for bulk list of {len(bulk_list)} urls, beginning {bulk_list[0]}")
+                    logging.warning(f"Deletion status: {status} for bulk list of {len(bulk_list)} urls, first url in list: {bulk_list[0]}")
                     bulk_list = []
                     status = False
 
