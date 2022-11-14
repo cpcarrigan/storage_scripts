@@ -2,4 +2,4 @@
 
 min_ago=120
 
-find work/active -mmin +${min_ago} -exec mv '{}' work/ready \;
+find work/active -type f -mmin +${min_ago} -exec mv '{}' work/ready \;
