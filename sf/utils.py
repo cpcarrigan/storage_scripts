@@ -114,7 +114,7 @@ class ObjectStorage:
         try: 
           temp_resp = self.session[key][4].get('http://'+ self.session[key][0] + '.sf-cdn.com/auth/v1.0', 
             headers={"X-Auth-User": self.session[key][2], "X-Auth-Key": self.session[key][3] })
-        except urllib3.connection.HTTPConnection:
+        except HTTPConnection:
           print(f"Failed to get auth token, exiting. work/active/{data_file}")
           logging.critical(f"Failed to get auth token, exiting. work/active/{data_file}")
           sys.exit()
@@ -125,9 +125,9 @@ class ObjectStorage:
       try: 
         temp_resp = self.session[cluster_tenant][4].get('http://'+ self.session[cluster_tenant][0] + '.sf-cdn.com/auth/v1.0', 
           headers={"X-Auth-User": self.session[cluster_tenant][2], "X-Auth-Key": self.session[cluster_tenant][3] })
-      except urllib3.connection.HTTPConnection:
-        print(f"Failed to get auth token, exiting. work/active/{data_file}")
-        logging.critical(f"Failed to get auth token, exiting. work/active/{data_file}")
+      except HTTPConnection:
+        print(f"Failed to get auth token, exiting.")
+        logging.critical(f"Failed to get auth token, exiting.")
         sys.exit()
       self.session[cluster_tenant][5] = temp_resp.headers["X-Auth-Token"]
     logging.info("Done creating session for " + cluster_tenant)
@@ -160,8 +160,8 @@ class ObjectStorage:
     try:
       m = url_pattern.match(list_urls[0])
     except IndexError:
-      print(f"Exiting. Failed to match pattern on {list_urls}, working on file: {data_file}")
-      logging.critical(f"Exiting. Failed to match pattern on {list_urls}, working on file: {data_file}")
+      print(f"Exiting. Failed to match pattern on {list_urls}")
+      logging.critical(f"Exiting. Failed to match pattern on {list_urls}")
       sys.exit()
     # extract container and object into an array
     delete_list =''
