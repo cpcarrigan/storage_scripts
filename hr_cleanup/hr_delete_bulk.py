@@ -66,6 +66,7 @@ while not os.path.exists(STOP):
         acct = ''
         cluster = ''
         new_acct = False
+        logging.debug(f"acct: {acct}, cluster: {cluster}, new_acct: {new_acct}")
         for line in f:
             ele = line.strip().split(',')
             logging.info(f"looking at: '{line.rstrip()}'")
@@ -82,16 +83,22 @@ while not os.path.exists(STOP):
                     cluster = matched.group(1)
                 if acct != matched.group(2) or cluster != matched.group(1):
                     new_acct = True
+                    logging.debug(f"acct: {acct} vs {matched.group(2)}, cluster: {cluster} vs {matched.group(1)}, new_acct: {new_acct}") 
 
-                # need to add logic so that if the hostname or the account changes,
-                # submit the batch without waiting for the full set of data
+                    # need to add logic so that if the hostname or the account changes, 
+                    # submit the batch without waiting for the full set of data 
                 if len(bulk_list) < count and new_acct == False:
                     bulk_list.append(url)
                 else:
+                    logging.debug(f"acct: {acct} vs {matched.group(2)}, cluster: {cluster} vs {matched.group(1)}, new_acct: {new_acct}") 
+                    logging.debug(f"About to submit the bulk_list: {bulk_list}")
                     status = files_object.delete_openstack_batch(bulk_list)
                     logging.warning(f"Deletion status: {status} for bulk list of {len(bulk_list)} urls, first url in list: {bulk_list[0]}")
                     bulk_list = []
+                    acct = ''
+                    cluster = ''
                     status = False
+                    new_acct = False
 
     f.close()
 
