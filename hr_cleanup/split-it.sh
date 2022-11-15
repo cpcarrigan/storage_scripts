@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+set -o errexit
+set -o nounset
 
 csvgz=$1
 csv=`echo ${csvgz} | sed -e 's/.gz//'`
