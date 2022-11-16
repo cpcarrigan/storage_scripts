@@ -28,7 +28,8 @@ echo "gz: ${fixgz}"
 
 gunzip "${fixgz}"
 
-fixcsv=`echo ${fixgz} | sed -e 's/.gz$//'`
+# -fixcsv=`echo ${fixgz} | sed -e 's/.gz$//'`
+fixcsv="${fixgz/.gz/}"
 
 echo "csv: ${fixcsv}"
 
