@@ -114,7 +114,7 @@ class ObjectStorage:
         try: 
           temp_resp = self.session[key][4].get('http://'+ self.session[key][0] + '.sf-cdn.com/auth/v1.0', 
             headers={"X-Auth-User": self.session[key][2], "X-Auth-Key": self.session[key][3] })
-        except HTTPConnection:
+        except :
           print(f"Failed to get auth token, exiting. work/active/{data_file}")
           logging.critical(f"Failed to get auth token, exiting. work/active/{data_file}")
           sys.exit()
@@ -125,7 +125,7 @@ class ObjectStorage:
       try: 
         temp_resp = self.session[cluster_tenant][4].get('http://'+ self.session[cluster_tenant][0] + '.sf-cdn.com/auth/v1.0', 
           headers={"X-Auth-User": self.session[cluster_tenant][2], "X-Auth-Key": self.session[cluster_tenant][3] })
-      except HTTPConnection:
+      except:
         print(f"Failed to get auth token, exiting.")
         logging.critical(f"Failed to get auth token, exiting.")
         sys.exit()
