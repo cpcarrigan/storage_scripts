@@ -35,9 +35,9 @@ class ObjectStorage:
     # swiftbuckets.sf-cdn.com uass
 
     self.session = {
-        'swiftbuckets-encoding': ['swiftbuckets', 'encoding', config['swiftbuckets-encoding']['user'], config['swiftbuckets-encoding']['password'], '', ''],
-        'swiftbuckets-snapfish': ['swiftbuckets', 'snapfish', config['swiftbuckets-snapfish']['user'], config['swiftbuckets-snapfish']['password'], '', ''],
-        'swiftbuckets-uass':     ['swiftbuckets', 'uass', config['swiftbuckets-uass']['user'], config['swiftbuckets-uass']['password'], '', ''],
+        # 'swiftbuckets-encoding': ['swiftbuckets', 'encoding', config['swiftbuckets-encoding']['user'], config['swiftbuckets-encoding']['password'], '', ''],
+        # 'swiftbuckets-snapfish': ['swiftbuckets', 'snapfish', config['swiftbuckets-snapfish']['user'], config['swiftbuckets-snapfish']['password'], '', ''],
+        # 'swiftbuckets-uass':     ['swiftbuckets', 'uass', config['swiftbuckets-uass']['user'], config['swiftbuckets-uass']['password'], '', ''],
         's1-snapfish':           ['s1', 'snapfish', config['s1-snapfish']['user'], config['s1-snapfish']['password'], '', ''],
         's1-uass':               ['s1', 'uass', config['s1-uass']['user'], config['s1-uass']['password'], '', ''],
         's2-snapfish':           ['s2', 'snapfish', config['s2-snapfish']['user'], config['s2-snapfish']['password'], '', ''],
