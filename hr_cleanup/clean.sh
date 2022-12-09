@@ -26,7 +26,7 @@ echo "gz: ${fixgz}"
 # sort by column 3 -- sort -k 3 ?
 # gzip again
 
-gunzip "${fixgz}"
+#gunzip "${fixgz}"
 
 # -fixcsv=`echo ${fixgz} | sed -e 's/.gz$//'`
 fixcsv="${fixgz/.gz/}"
