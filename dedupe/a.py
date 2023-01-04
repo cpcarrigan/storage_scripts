@@ -50,7 +50,7 @@ for obj in [*resp['Versions'], *resp.get('DeleteMarkers', [])]:
     logging.warning(f"Size: {obj['Size']}\n")
 
     if prev_version == '':
-        logging.info(f"No previous version stored, storing {obj['VersionId']}\n")
+        logging.info(f"No previous version saved; saving version: {obj['VersionId']}\n")
         prev_version = obj['VersionId']
         prev_size = int(obj['Size'])
         prev_date = obj['LastModified']
@@ -64,26 +64,26 @@ for obj in [*resp['Versions'], *resp.get('DeleteMarkers', [])]:
             logging.warning(f"Same size ({prev_size}B), comparing dates - {prev_date} vs {obj['LastModified']}")
             # if stored date is newer, delete current evaluation
             if prev_date >= obj['LastModified']:
-                logging.warning(f"Same size, saved version is newer or same date, keeping {prev_version}")
+                logging.warning(f"Same size, saved version is newer or same date, saving {prev_version}, deleting {obj['VersionId']}")
                 to_del.append(obj['VersionId'])
             # else, delete the stored version, and save the current evaluation to stored version
             else:
                 to_del.append(prev_version)
-                logging.warning(f"Same size, current evaluation is newer, keeping: {obj['VersionId']}")
+                logging.warning(f"Same size, current evaluation is newer, saving: {obj['VersionId']}, deleting {prev_version}")
                 prev_version = obj['VersionId']
                 prev_size = int(obj['Size'])
                 prev_date = obj['LastModified']
         else:
-            logging.warning(f"Current evaluation is larger, {obj['Size']} vs {prev_size}, keeping current version: {obj['VersionId']}")
+            logging.warning(f"Current evaluation is larger, {obj['Size']} vs {prev_size}, saving current version: {obj['VersionId']}, deleting {prev_version}")
             to_del.append(prev_version)
             prev_version = obj['VersionId']
             prev_size = int(obj['Size'])
             prev_date = obj['LastModified']
             # logging.warning(f"{prev_version} is greater than or equal to {obj['VersionId']}, keeping {prev_version}")
 
-logging.warning(f"Will delete: {to_del}\n")
+logging.warning(f"Will delete the following version(s): {to_del}\n")
 for versionId in to_del:
-    logging.warning(f"Delete {versionId} of object {prefix} in bucket {bucket}")
+    logging.warning(f"Delete version {versionId} of object {prefix} in bucket {bucket}")
 logging.warning(f"################################################")
 
 
