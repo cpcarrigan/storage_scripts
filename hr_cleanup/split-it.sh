@@ -4,8 +4,6 @@ set -o errexit
 set -o nounset
 
 csvgz=$1
-#csv=`echo ${csvgz} | sed -e 's/.gz//'`
-#       ^-- SC2001: See if you can use ${variable//search/replace} instead.
 csv="${csvgz/.gz/}"
 
 echo "about to uncompress ${csvgz}"
