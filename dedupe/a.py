@@ -9,14 +9,16 @@ from dateutil.parser import parse as parsedate
 import time
 
 
-bucket = 'snapfish-prod-media-raw-snapfish'
+# bucket = 'snapfish-prod-media-raw-snapfish'
 
 parser = argparse.ArgumentParser()
-parser.add_argument("prefix", help=f"Pass a prefix/key to dedupe. Assumes the {bucket}")
+parser.add_argument("bucket", help=f"Pass a bucket to dedupe.")
+parser.add_argument("prefix", help=f"Pass a prefix/key to dedupe")
 args = parser.parse_args()
 logging.basicConfig(filename='a.log',level=logging.INFO,format='%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 #logging.info("File to import: " + args.filename)
 prefix = args.prefix
+bucket = args.bucket
 # prefix = '1f5eff/40758720050-1004851833784070.jpg'
 
 # session = boto3.Session(profile_name='migration')
