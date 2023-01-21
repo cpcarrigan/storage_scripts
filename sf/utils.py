@@ -1,11 +1,14 @@
 
 import base64
+import boto3
 import configparser
 import datetime
+from dateutil.parser import parse as parsedate
 import hashlib
 import hmac
 import json
 import logging
+import os
 import pytz
 import re
 import requests
@@ -20,7 +23,7 @@ class ObjectStorage:
 
     # dict of lists, store user, tenant, auth token, password, requests session:
     # {'cluster_tenant': ['cluster', 'tenant', 'user-str', 'password', 'session-obj','auth-token']
-    
+
     config = configparser.ConfigParser()
     config.read("/home/ccarrigan/git/storage_scripts/conf/setup.ini")
 
@@ -111,8 +114,8 @@ class ObjectStorage:
       for key in self.session:
         logging.debug(self.session[key][0])
         self.session[key][4] = requests.session()
-        try: 
-          temp_resp = self.session[key][4].get('http://'+ self.session[key][0] + '.sf-cdn.com/auth/v1.0', 
+        try:
+          temp_resp = self.session[key][4].get('http://'+ self.session[key][0] + '.sf-cdn.com/auth/v1.0',
             headers={"X-Auth-User": self.session[key][2], "X-Auth-Key": self.session[key][3] })
         except :
           print(f"Failed to get auth token, exiting. work/active/{data_file}")
@@ -122,8 +125,8 @@ class ObjectStorage:
         logging.debug(self.session[key])
     else:
       self.session[cluster_tenant][4] = requests.session()
-      try: 
-        temp_resp = self.session[cluster_tenant][4].get('http://'+ self.session[cluster_tenant][0] + '.sf-cdn.com/auth/v1.0', 
+      try:
+        temp_resp = self.session[cluster_tenant][4].get('http://'+ self.session[cluster_tenant][0] + '.sf-cdn.com/auth/v1.0',
           headers={"X-Auth-User": self.session[cluster_tenant][2], "X-Auth-Key": self.session[cluster_tenant][3] })
       except:
         print(f"Failed to get auth token, exiting.")
@@ -144,9 +147,9 @@ class ObjectStorage:
 
     if host and host == 'esthreecos1.sf-cdn.com':
       return delete_cos_object(url)
-    elif host and (host == 'swiftbuckets.sf-cdn.com' 
-                  or host == 's1.sf-cdn.com' 
-                  or host == 's2.sf-cdn.com'): 
+    elif host and (host == 'swiftbuckets.sf-cdn.com'
+                  or host == 's1.sf-cdn.com'
+                  or host == 's2.sf-cdn.com'):
       return self.delete_openstack_object(url)
     else:
       logging.info("Server or URL pattern didn't match: " + url)
@@ -183,7 +186,7 @@ class ObjectStorage:
         # url_pattern.extract(url)
         logging.debug(f"URL to delete: {container}/{obj}")
         delete_list += urllib.parse.quote(f"{container}/{obj}")+'\n'
-      
+
       try:
         logging.debug(self.session[cluster_tenant])
         logging.debug(f"about to delete: {delete_list}")
@@ -270,7 +273,7 @@ class ObjectStorage:
     tnl_resp = self.tnl_sess.head(url)
 
     logging.info(url)
-    
+
     if tnl_resp.status_code == 302:
       # grab the 'Location: header, put in log
       logging.warning(str(tnl_resp.status_code) + ' status Location: ' + tnl_resp.headers['Location'] + " for: " + url)
@@ -291,16 +294,16 @@ def make_digest(message, key):
   logging.debug("key: " + key)
   key = bytes(key, 'UTF-8')
   message = bytes(message, 'UTF-8')
-    
+
   digester = hmac.new(key, message, hashlib.sha1)
   signature1 = digester.digest()
   logging.debug("Signature 1: " + str(signature1))
-    
-  signature2 = base64.urlsafe_b64encode(signature1)    
+
+  signature2 = base64.urlsafe_b64encode(signature1)
   logging.debug("Signature 2: " + str(signature2))
-    
+
   return str(signature2, 'UTF-8')
-  
+
 # defaults to phl - esthreecos1.sf-cdn.com
 def delete_cos_object(object_file, host='esthreecos1.sf-cdn.com', bucket='snapfish'):
   s3_host = 'esthreecos1.sf-cdn.com'
@@ -316,7 +319,7 @@ def delete_cos_object(object_file, host='esthreecos1.sf-cdn.com', bucket='snapfi
     host = m.group(1)
     bucket = m.group(2)
     object_file = m.group(3)
-  
+
   logging.info("Object to delete - host: '" + host + "' bucket: '" + bucket + "' object_file: '" + object_file)
   pst_timezone = pytz.timezone("US/Pacific")
   date_value = pst_timezone.localize(datetime.datetime.now()).strftime('%a, %d %b %Y %H:%M:%S %z')
@@ -336,3 +339,62 @@ def delete_cos_object(object_file, host='esthreecos1.sf-cdn.com', bucket='snapfi
     return True
   else:
     return False
+
+
+def dedupe_s3_object(bucket, prefix):
+  bucket = 'snapfish-prod-media-raw-snapfish'
+
+  client = boto3.client('s3')
+
+  resp = client.list_object_versions(Prefix=prefix, Bucket=bucket)
+
+  logging.warning(f"Bucket: {bucket}")
+  logging.warning(f"Key: {prefix}\n")
+
+  prev_version = ''
+  prev_size = ''
+  prev_date = datetime.datetime.fromtimestamp(time.time()).astimezone()
+
+  to_del = []
+
+  for obj in [*resp['Versions'], *resp.get('DeleteMarkers', [])]:
+      logging.warning(f"Key: {obj['Key']}")
+      logging.warning(f"VersionId: {obj['VersionId']}")
+      logging.warning(f"LastModified: {obj['LastModified']}")
+      logging.warning(f"IsLatest: {obj['IsLatest']}")
+      logging.warning(f"Size: {obj['Size']}\n")
+
+      if prev_version == '':
+          logging.info(f"No previous version saved; saving version: {obj['VersionId']}\n")
+          prev_version = obj['VersionId']
+          prev_size = int(obj['Size'])
+          prev_date = obj['LastModified']
+          next
+      else:
+          if prev_size > int(obj['Size']):
+              logging.warning(f"Saved version: {prev_version} is greater than or equal to {obj['VersionId']}, keeping {prev_version}")
+              to_del.append({'VersionId': obj['VersionId'], 'Bucket': bucket, 'Prefix': prefix})
+          # if sizes are equal, then keep whichever is newer:
+          elif prev_size == int(obj['Size']):
+              logging.warning(f"Same size ({prev_size}B), comparing dates - {prev_date} vs {obj['LastModified']}")
+              # if stored date is newer, delete current evaluation
+              if prev_date >= obj['LastModified']:
+                  logging.warning(f"Same size, saved version is newer or same date, saving {prev_version}, deleting {obj['VersionId']}")
+                  to_del.append({'VersionId': obj['VersionId'], 'Bucket': bucket, 'Prefix': prefix})
+              # else, delete the stored version, and save the current evaluation to stored version
+              else:
+                  #to_del.append(prev_version)
+                  to_del.append({'VersionId': prev_version, 'Bucket': bucket, 'Prefix': prefix})
+                  logging.warning(f"Same size, current evaluation is newer, saving: {obj['VersionId']}, deleting {prev_version}")
+                  prev_version = obj['VersionId']
+                  prev_size = int(obj['Size'])
+                  prev_date = obj['LastModified']
+          else:
+              logging.warning(f"Current evaluation is larger, {obj['Size']} vs {prev_size}, saving current version: {obj['VersionId']}, deleting {prev_version}")
+              to_del.append({'VersionId': prev_version, 'Bucket': bucket, 'Prefix': prefix})
+              prev_version = obj['VersionId']
+              prev_size = int(obj['Size'])
+              prev_date = obj['LastModified']
+              logging.debug(f"{prev_version} is greater than or equal to {obj['VersionId']}, keeping {prev_version}")
+
+  return to_del
