@@ -16,8 +16,8 @@ import sys
 cluster = sys.argv[1]
 tenant = sys.argv[2]
 container_prefix = sys.argv[3]
-start = sys.argv[4]
-end = sys.argv[5]
+start = int(sys.argv[4])
+end = int(sys.argv[5])
 
 
 config = configparser.ConfigParser()
