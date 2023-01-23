@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 import logging
 import os
 import re
+import sys
 import time
-from swiftclient.service import SwiftService, SwiftError
 from sys import argv
 
 
@@ -26,7 +26,9 @@ os.environ['ST_KEY'] = config['swiftbuckets-retail']['password']
 os.environ['ST_AUTH'] = 'https://swiftbuckets.sf-cdn.com/auth/v1.0'
 os.environ['ST_AUTH_VERSION'] = '1.0'
 
-env_var = os.environ
+from swiftclient.service import SwiftService, SwiftError
+
+# env_var = os.environ
 # print(env_var)
 
 logging.basicConfig(level=logging.ERROR)
@@ -35,15 +37,41 @@ logging.getLogger("requests").setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 container = 'production'
-minimum_size = 1024
+minimum_size = 10
 cutoff_date = datetime.now() - timedelta(days=180)
 print(cutoff_date)
 print("done with date")
 
 pattern = '^\d+.xml$'
 
-batch_size = 9999
+batch_size = 100
 to_delete = []
+
+import psutil
+
+def findProcessIdByName(processName):
+  '''
+  Get a list of all the PIDs of a all the running process whose name contains
+  the given string processName
+  '''
+  listOfProcessObjects = []
+  # Iterate over the all the running process
+  for proc in psutil.process_iter():
+    try:
+      pinfo = proc.as_dict(attrs=['pid', 'name', 'create_time'])
+      # Check if process name contains the given name string.
+      if processName.lower() in pinfo['name'].lower() :
+        listOfProcessObjects.append(pinfo)
+    except (psutil.NoSuchProcess, psutil.AccessDenied , psutil.ZombieProcess) :
+      pass
+  return listOfProcessObjects;
+
+listOfProcessIds = findProcessIdByName('cleanup_retail_')
+# exit if the program is already running
+if len(listOfProcessIds)> 1:
+  sys.exit()
+  
+# print(listOfProcessIds)
 
 _opts = {'object_dd_threads': 20, 'container_threads': 20}
 with SwiftService() as swift:
@@ -74,17 +102,27 @@ with SwiftService() as swift:
           #   )
           if len(to_delete) > batch_size:
             # print("about to delete")
-            print(to_delete)
+            # print(to_delete)
             try:
               delete_gen = swift.delete(container=container, objects=to_delete)
               for element in delete_gen:
                 tic = time.perf_counter()
                 if element["success"]:
                   logger.error("Successful deletion of :", element)
-                  print(element)
+                  # print(element)
+                  # print(element['response_dict'][0]['response_dicts'])
+                  logger.error("status: ")
+                  logger.error(element['response_dict']['response_dicts']['status'])
+                  # print("full response_dict: ")
+                  print(element['response_dict'])
+                  # print(element['response_dict']['response_dicts'][1]['status'])
                 else:
+                  # print(element)
+                  logger.error("Failed deletion of :", element)
+                  print(element['response_dict'])
+                  print(element['response_dict']['response_dicts'][1]['status'])
                   logger.error("Failure deletion of :", element)
-                  print(element)
+                  # print(element)
                 toc = time.perf_counter()
                 print(f"Deleted in {toc - tic:0.4f} seconds")
             except SwiftError as d:
