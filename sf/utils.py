@@ -307,8 +307,8 @@ def make_digest(message, key):
 # defaults to phl - esthreecos1.sf-cdn.com
 def delete_cos_object(object_file, host='esthreecos1.sf-cdn.com', bucket='snapfish'):
   s3_host = 'esthreecos1.sf-cdn.com'
-  s3_key='tiEHBOJaJLFC0MDwfs5k'
-  s3_secret='hNnKKEdpZ8IKfFFsMQgcNFfKAdynoTh5PndRzJ8l'
+  s3_key=''
+  s3_secret=''
   s3_session = requests.session()
 
   # match on: http://irmw-cf.sf-cdn.com/snapfish/lowres_7959/nJprn-UfyjIACAzzU0sLDMk-bPJGXBiJWFSqmOxeveo.jpg
