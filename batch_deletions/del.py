@@ -7,7 +7,6 @@ from datetime import datetime
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-# import random
 import sys
 import time
 
@@ -34,7 +33,8 @@ def main():
         bucket = sys.argv[1]
         del_file = sys.argv[2]
     else:
-        print('usage: ./del.py bucket_name delete_file.txt\nThe delete file should be a list of objects in the bucket, 1 per line. eg: 100061/158714409060-3142591617070.jpg')
+        print('usage: ./del.py bucket_name delete_file.txt\nThe delete file should be a " + \
+              list of objects in the bucket, 1 per line. eg: 100061/158714409060-3142591617070.jpg')
 
 
     last_line = ''
@@ -76,8 +76,10 @@ def main():
                 response = s3_client.delete_objects(Bucket=bucket, Delete={'Objects': to_del})
                 logging.info(response)
                 bfinish_tic = time.perf_counter()
-                logging.warning(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
-                print(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
+                logging.warning(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for " + \
+                                f"{count} records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
+                print(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} " + \
+                      f"records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
                 count = 0
                 to_del = []
                 bstart_tic = time.perf_counter()
@@ -89,13 +91,14 @@ def main():
                 response = s3_client.delete_objects(Bucket=bucket, Delete={'Objects': to_del})
                 logging.info(response)
                 bfinish_tic = time.perf_counter()
-                logging.warning(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
-                print(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
+                logging.warning(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} " + \
+                                f"records ({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
+                print(f"Batch took: {bfinish_tic - bstart_tic:0.4f} seconds for {count} records " + \
+                      f"({(bfinish_tic - bstart_tic)/count:0.4f} seconds per record)")
                 count = 0
                 to_del = []
                 bstart_tic = time.perf_counter()
     
-    # move {data_active}/{ready_file} to {data_done}/{ready_file}YP
     work_file.close()
 
     finish_tic = time.perf_counter()
