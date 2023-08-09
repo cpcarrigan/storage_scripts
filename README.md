@@ -11,4 +11,6 @@ object storage.
 See full documentation [here](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_objects.html)
 
 * [dedupe versions](dedupe/dedupe_batch_mode.py) - takes a directory, reads in a list of objects, figures out which versions should be kept and which should be deleted, generates a list of objects with versionIds to delete.
+* [VM image usage](pf9/image_usage_count.py) - pull list of images from openstack, count the number of times used, uses 'project.txt' as a prexisting list of projects to query against.
+* 
 
